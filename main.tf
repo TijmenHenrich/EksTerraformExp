@@ -13,7 +13,7 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  cluster_name = "aep-eks"+var.environment
+  cluster_name = "aep-eks-${var.environment}"
 }
 
 resource "random_string" "suffix" {

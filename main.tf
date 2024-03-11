@@ -57,11 +57,10 @@ module "eks" {
 
   vpc_id                         = module.vpc.vpc_id
   subnet_ids                     = module.vpc.private_subnets
-  cluster_endpoint_public_access = true
+  cluster_endpoint_public_access = false
 
   eks_managed_node_group_defaults = {
     ami_type = "AL2_x86_64"
-
   }
 
   eks_managed_node_groups = {
@@ -111,26 +110,26 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
-resource "helm_release" "argocd-staging" {
-  name       = "argocd-staging"
+resource "helm_release" "argocd-$${var.environment}" {
+  name       = "argocd-${var.environment}"
   chart      = "argo-cd"
   repository = "https://argoproj.github.io/argo-helm"
   version    = "5.27.3"
-  namespace  = "argocd-staging"
+  namespace  = "argocd-${var.environment}"
   timeout    = "1200"
   values     = [templatefile("./argocd/install.yaml", {})]
 }
 resource "null_resource" "password" {
   provisioner "local-exec" {
     working_dir = "./argocd"
-    command     = "kubectl -n argocd-staging get secret argocd-initial-admin-secret -o jsonpath={.data.password} | base64 -d > argocd-login.txt"
+    command     = "kubectl -n argocd-${var.environment} get secret argocd-initial-admin-secret -o jsonpath={.data.password} | base64 -d > argocd-login.txt"
   }
 }
 
 resource "null_resource" "del-argo-pass" {
   depends_on = [null_resource.password]
   provisioner "local-exec" {
-    command = "kubectl -n argocd-staging delete secret argocd-initial-admin-secret"
+    command = "kubectl -n argocd-${var.environment} delete secret argocd-initial-admin-secret"
   }
 }
 

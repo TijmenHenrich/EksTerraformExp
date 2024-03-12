@@ -26,6 +26,18 @@ module "eks" {
   }
 }
 
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.default.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.default.certificate_authority[0].data)
+  # token                  = data.aws_eks_cluster_auth.default.token
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    args        = ["eks", "get-token", "--cluster-name", data.aws_eks_cluster.default.id]
+    command     = "aws"
+  }
+}
+
 data "aws_iam_policy" "ebs_csi_policy" {
   arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }
@@ -51,6 +63,7 @@ resource "aws_eks_addon" "ebs-csi" {
     "terraform" = "true"
   }
 }
+
 
 output "cluster_security_group_id" {
   description = "Security group ids attached to the cluster control plane"

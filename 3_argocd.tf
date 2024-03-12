@@ -4,7 +4,7 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
-resource "helm_release" "argocd-$${var.environment}" {
+resource "helm_release" "argocd" {
   name       = "argocd-${var.environment}"
   chart      = "argo-cd"
   repository = "https://argoproj.github.io/argo-helm"

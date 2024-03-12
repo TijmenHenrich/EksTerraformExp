@@ -26,18 +26,6 @@ module "eks" {
   }
 }
 
-provider "kubernetes" {
-  host                   = module.eks.cluster_id.default.endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_id.default.certificate_authority[0].data)
-  # token                  = module.eks.cluster_id.default.token
-
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_id.default.id]
-    command     = "aws"
-  }
-}
-
 data "aws_iam_policy" "ebs_csi_policy" {
   arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }
@@ -61,6 +49,28 @@ resource "aws_eks_addon" "ebs-csi" {
   tags = {
     "eks_addon" = "ebs-csi"
     "terraform" = "true"
+  }
+}
+
+data "aws_eks_cluster" "default" {
+  name = local.cluster_name
+}
+
+data "aws_eks_cluster_auth" "default" {
+  name = local.cluster_name
+}
+
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.default.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.default.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.default.token
+}
+
+provider "helm" {
+  kubernetes {
+    host                   = data.aws_eks_cluster.default.endpoint
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.default.certificate_authority[0].data)
+    token                  = data.aws_eks_cluster_auth.default.token
   }
 }
 

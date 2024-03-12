@@ -13,10 +13,10 @@ resource "helm_release" "argocd" {
   timeout    = "1200"
   values     = [templatefile("argocd/install.yaml", {})]
 }
+
 resource "null_resource" "password" {
   provisioner "local-exec" {
-    working_dir = "./argocd"
-    command     = "kubectl -n argocd-${var.environment} get secret argocd-initial-admin-secret -o jsonpath={.data.password} | base64 -d > argocd-login.txt"
+    command = "kubectl -n argocd-${var.environment} get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d > argocd-password.txt"
   }
 }
 
@@ -25,6 +25,13 @@ resource "null_resource" "del-argo-pass" {
   provisioner "local-exec" {
     command = "kubectl -n argocd-${var.environment} delete secret argocd-initial-admin-secret"
   }
+}
+
+# Exposed ArgoCD API - authenticated using `username`/`password`
+provider "argocd" {
+  server_addr = "argocd.local:443"
+  username    = "admin"
+  password    = filebase64("argocd-password.txt")
 }
 
 # Public Helm repository

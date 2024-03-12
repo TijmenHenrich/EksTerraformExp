@@ -4,6 +4,11 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
+# Fetch the password from AWS Secrets Manager
+data "aws_secretsmanager_secret" "argocd_password" {
+  name = "argocd-password"
+}
+
 resource "helm_release" "argocd" {
   name       = "argocd-${var.environment}"
   chart      = "argo-cd"
@@ -11,7 +16,9 @@ resource "helm_release" "argocd" {
   version    = "5.27.3"
   namespace  = "argocd-${var.environment}"
   timeout    = "1200"
-  values     = [templatefile("argocd/install.yaml", {})]
+  values     = [templatefile("argocd/install.yaml", {
+    argocd_admin_password = data.aws_secretsmanager_secret.argocd_password.secret_string
+  })]
 }
 
 resource "null_resource" "password" {

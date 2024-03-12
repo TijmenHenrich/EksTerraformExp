@@ -21,24 +21,18 @@ resource "helm_release" "argocd" {
   })]
 }
 
-resource "null_resource" "password" {
-  provisioner "local-exec" {
-    command = "kubectl -n argocd-${var.environment} get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d > argocd-password.txt"
-  }
-}
-
-resource "null_resource" "del-argo-pass" {
-  depends_on = [null_resource.password]
-  provisioner "local-exec" {
-    command = "kubectl -n argocd-${var.environment} delete secret argocd-initial-admin-secret"
+# Query AWS for Load Balancers created by ArgoCD
+data "aws_lb" "argocd_lbs" {
+  tags = {
+    "kubernetes.io/service-name" = "argocd-${var.environment}/argocd-${var.environment}-server"  # Adjust the tag values as per your ArgoCD configuration
   }
 }
 
 # Exposed ArgoCD API - authenticated using `username`/`password`
 provider "argocd" {
-  server_addr = "argocd.local:443"
+  server_addr = data.aws_lb.argocd_lbs.load_balancers[0].dns_name
   username    = "admin"
-  password    = filebase64("argocd-password.txt")
+  password    = data.aws_secretsmanager_secret.argocd_password.secret_string
 }
 
 # Public Helm repository

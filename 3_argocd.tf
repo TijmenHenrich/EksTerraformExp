@@ -26,3 +26,10 @@ resource "null_resource" "del-argo-pass" {
     command = "kubectl -n argocd-${var.environment} delete secret argocd-initial-admin-secret"
   }
 }
+
+# Public Helm repository
+resource "argocd_repository" "public_nginx_helm" {
+  repo = "https://helm.nginx.com/stable"
+  name = "nginx-stable"
+  type = "helm"
+}

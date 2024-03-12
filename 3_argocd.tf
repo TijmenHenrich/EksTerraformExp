@@ -11,7 +11,7 @@ resource "helm_release" "argocd" {
   version    = "5.27.3"
   namespace  = "argocd-${var.environment}"
   timeout    = "1200"
-  values     = [templatefile("./argocd/install.yaml", {})]
+  values     = [templatefile("argocd/install.yaml", {})]
 }
 resource "null_resource" "password" {
   provisioner "local-exec" {

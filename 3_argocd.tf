@@ -17,7 +17,7 @@ resource "helm_release" "argocd" {
   namespace  = "argocd-${var.environment}"
   timeout    = "1200"
   values     = [templatefile("argocd/install.yaml", {
-    argocd_admin_password = data.aws_secretsmanager_secret.argocd_password.secret_string
+    argocd_admin_password = data.aws_secretsmanager_secret.argocd_password.standard_secret_arn.secret_string
   })]
 }
 
@@ -30,9 +30,9 @@ data "aws_lb" "argocd_lbs" {
 
 # Exposed ArgoCD API - authenticated using `username`/`password`
 provider "argocd" {
-  server_addr = data.aws_lb.argocd_lbs.load_balancers[0].dns_name
+  server_addr = data.aws_lb.argocd_lbs.arns[0].dns_name
   username    = "admin"
-  password    = data.aws_secretsmanager_secret.argocd_password.secret_string
+  password    = data.aws_secretsmanager_secret.argocd_password.standard_secret_arn.secret_string
 }
 
 # Public Helm repository

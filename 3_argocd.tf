@@ -28,9 +28,14 @@ data "aws_lb" "argocd_lbs" {
   }
 }
 
+# Get the Load Balancer details using the ARN
+data "aws_lb" "argocd_lb" {
+  arn  = tolist(data.aws_lb.argocd_lbs.arns)[0]
+}
+
 # Exposed ArgoCD API - authenticated using `username`/`password`
 provider "argocd" {
-  server_addr = data.aws_lb.argocd_lbs.arns[0].dns_name
+  server_addr = data.aws_lb.argocd_lb.dns_name
   username    = "admin"
   password    = data.aws_secretsmanager_secret.argocd_password.standard_secret_arn.secret_string
 }

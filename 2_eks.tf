@@ -53,11 +53,13 @@ resource "aws_eks_addon" "ebs-csi" {
 }
 
 data "aws_eks_cluster" "default" {
-  name = "${var.cluster-name}-${var.environment}"
+  name = module.eks.cluster_name
+  depends_on = [module.eks]
 }
 
 data "aws_eks_cluster_auth" "default" {
-  name = "${var.cluster-name}-${var.environment}"
+    name = module.eks.cluster_name
+    depends_on = [module.eks]
 }
 
 provider "kubernetes" {

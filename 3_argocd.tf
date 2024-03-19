@@ -36,7 +36,8 @@ resource "helm_release" "argocd" {
 # Query AWS for Load Balancers created by ArgoCD
 data "aws_lb" "argocd_lbs" {
   tags = {
-    "kubernetes.io/service-name" = "argocd-${var.environment}/argocd-${var.environment}-server"  # Adjust the tag values as per your ArgoCD configuration
+    "kubernetes.io/service-name" = "argocd/argocd-${var.environment}/argo-app-server" # Load Balancer tag
+    #kubernetes.io/service-name" = "argocd/argocd-dev/argo-test-app-server"  # Adjust the tag values as per your ArgoCD configuration
   }
 }
 

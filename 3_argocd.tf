@@ -4,9 +4,21 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
+# Create a secret in AWS Secrets Manager
+resource "aws_secretsmanager_secret" "argocd_password" {
+  name        = "argocd-password"
+  description = "Password for ArgoCD"
+}
+
+# Create a secret version in AWS Secrets Manager
+resource "aws_secretsmanager_secret_version" "argocd_password" {
+  secret_id     = aws_secretsmanager_secret.argocd_password.id
+  secret_string = "your_secret_password"
+}
+
 # Fetch the password from AWS Secrets Manager
 data "aws_secretsmanager_secret_version" "argocd_password" {
-  secret_id = "argocd-password"
+  secret_id = aws_secretsmanager_secret.argocd_password.id
 }
 
 resource "helm_release" "argocd" {

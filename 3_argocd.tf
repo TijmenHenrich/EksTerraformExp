@@ -5,8 +5,8 @@ resource "kubernetes_namespace" "argocd" {
 }
 
 # Fetch the password from AWS Secrets Manager
-data "aws_secretsmanager_secret" "argocd_password" {
-  name = "argocd-password"
+data "aws_secretsmanager_secret_version" "argocd_password" {
+  secret_id = "argocd-password"
 }
 
 resource "helm_release" "argocd" {
@@ -17,7 +17,7 @@ resource "helm_release" "argocd" {
   namespace  = "argocd-${var.environment}"
   timeout    = "1200"
   values     = [templatefile("argocd/install.yaml", {
-    argocd_admin_password = data.aws_secretsmanager_secret.argocd_password.standard_secret_arn.secret_string
+    argocd_admin_password = data.aws_secretsmanager_secret_version.argocd_password.secret_string
   })]
 }
 
@@ -30,14 +30,14 @@ data "aws_lb" "argocd_lbs" {
 
 # Get the Load Balancer details using the ARN
 data "aws_lb" "argocd_lb" {
-  arn  = tolist(data.aws_lb.argocd_lbs.arns)[0]
+  arn  = data.aws_lb.argocd_lbs.arn
 }
 
 # Exposed ArgoCD API - authenticated using `username`/`password`
 provider "argocd" {
   server_addr = data.aws_lb.argocd_lb.dns_name
   username    = "admin"
-  password    = data.aws_secretsmanager_secret.argocd_password.standard_secret_arn.secret_string
+  password    = data.aws_secretsmanager_secret_version.argocd_password.secret_string
 }
 
 # Public Helm repository

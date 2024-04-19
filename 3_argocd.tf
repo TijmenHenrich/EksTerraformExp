@@ -12,7 +12,7 @@ resource "random_password" "argocd_admin_password" {
 }
 
 # Set the random pass as the secret value in AWS Secrets Manager
-data "aws_secretsmanager_secret" "argocd_admin_password" {
+resource  "aws_secretsmanager_secret" "argocd_admin_password_secret" {
   name = "argocd-admin-password"
 }
 

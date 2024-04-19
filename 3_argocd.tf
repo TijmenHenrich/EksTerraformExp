@@ -19,6 +19,7 @@ resource  "aws_secretsmanager_secret" "argocd_admin_password_secret" {
 # Fetch the password from AWS Secrets Manager
 data "aws_secretsmanager_secret_version" "argocd_admin_password_version" {
   secret_id = aws_secretsmanager_secret.argocd_admin_password_secret.id
+  secret_string = random_password.argocd_admin_password.result
 }
 
 resource "helm_release" "argocd" {

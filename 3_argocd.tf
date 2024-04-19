@@ -4,21 +4,22 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
-# Create a secret in AWS Secrets Manager
-resource "aws_secretsmanager_secret" "argocd_password" {
-  name        = "argocd-password"
-  description = "Password for ArgoCD"
+# Create a secret version in AWS Secrets Manager
+resource "random_password" "argocd_admin_password" {
+  length           = 20
+  special          = true
+  override_special = "!@#"
 }
 
-# Create a secret version in AWS Secrets Manager
-resource "aws_secretsmanager_secret_version" "argocd_password" {
-  secret_id     = aws_secretsmanager_secret.argocd_password.id
-  secret_string = "your_secret_password"
+# Set the random pass as the secret value in AWS Secrets Manager
+data "aws_secretsmanager_secret" "argocd_admin_password" {
+  name = "argocd-admin-password"
 }
 
 # Fetch the password from AWS Secrets Manager
-data "aws_secretsmanager_secret_version" "argocd_password" {
-  secret_id = aws_secretsmanager_secret.argocd_password.id
+resource "aws_secretsmanager_secret_version" "argocd_admin_password_version" {
+  secret_id     = aws_secretsmanager_secret.argocd_admin_password_secret.id
+  secret_string = random_password.argocd_admin_password.result
 }
 
 resource "helm_release" "argocd" {
@@ -36,7 +37,7 @@ resource "helm_release" "argocd" {
 # Query AWS for Load Balancers created by ArgoCD
 data "aws_lb" "argocd_lbs" {
   tags = {
-    "kubernetes.io/service-name" = "argocd/argocd-${var.environment}/argo-app-server" # Load Balancer tag
+    "kubernetes.io/service-name" = "argocd-${var.environment}/argo-app-server" # Load Balancer tag
     #kubernetes.io/service-name" = "argocd/argocd-dev/argo-test-app-server"  # Adjust the tag values as per your ArgoCD configuration
   }
 }

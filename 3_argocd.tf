@@ -18,8 +18,7 @@ resource  "aws_secretsmanager_secret" "argocd_admin_password_secret" {
 
 # Fetch the password from AWS Secrets Manager
 data "aws_secretsmanager_secret_version" "argocd_admin_password_version" {
-  secret_id     = aws_secretsmanager_secret.argocd_admin_password_secret.id
-  secret_string = random_password.argocd_admin_password.result
+  secret_id = aws_secretsmanager_secret.argocd_admin_password_secret.id
 }
 
 resource "helm_release" "argocd" {
@@ -51,7 +50,7 @@ data "aws_lb" "argocd_lb" {
 provider "argocd" {
   server_addr = data.aws_lb.argocd_lb.dns_name
   username    = "admin"
-  password    = data.aws_secretsmanager_secret_version.argocd_password.secret_string
+  password    = data.aws_secretsmanager_secret_version.argocd_admin_password_version.secret_string
 }
 
 # Public Helm repository

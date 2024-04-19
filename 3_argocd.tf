@@ -30,7 +30,7 @@ resource "helm_release" "argocd" {
   namespace  = "argocd-${var.environment}"
   timeout    = "1200"
   values     = [templatefile("argocd/install.yaml", {
-    argocd_admin_password = data.aws_secretsmanager_secret_version.argocd_password.secret_string
+    argocd_admin_password = data.aws_secretsmanager_secret_version.argocd_admin_password_version.secret_string
   })]
 }
 

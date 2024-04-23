@@ -5,8 +5,8 @@ resource "kubernetes_namespace" "argocd" {
 }
 
 # Create a secret version in AWS Secrets Manager
-resource "aws_secretsmanager_random_password" "argocd_admin_password" { 
-  length = 20
+data "aws_secretsmanager_random_password" "argocd_admin_password" { 
+  password_length = 20
 }
 
 # Set the random pass as the secret value in AWS Secrets Manager
@@ -17,7 +17,7 @@ resource  "aws_secretsmanager_secret" "argocd_admin_password_secret" {
 # Fetch the password from AWS Secrets Manager
 resource "aws_secretsmanager_secret_version" "argocd_admin_password_version" {
   secret_id = aws_secretsmanager_secret.argocd_admin_password_secret.id
-  secret_string = random_password.argocd_admin_password.result
+  secret_string = data.aws_secretsmanager_random_password.argocd_admin_password.result
 }
 
 data "aws_secretsmanager_secret_version" "argocd_admin_password_data" {

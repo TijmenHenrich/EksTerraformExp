@@ -5,11 +5,8 @@ resource "kubernetes_namespace" "argocd" {
 }
 
 # Create a secret version in AWS Secrets Manager
-data "random_password" "argocd_admin_password" { 
-  password_length = 20 
-  exclude_numbers = false 
-  exclude_punctuation = true 
-  include_space = false 
+resource "random_password" "argocd_admin_password" { 
+  length = 20
 }
 
 # Set the random pass as the secret value in AWS Secrets Manager

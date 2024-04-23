@@ -39,6 +39,13 @@ resource "helm_release" "argocd" {
   })]
 }
 
+data "aws_lb" "argocd_lb" {
+  tags = {
+    "kubernetes.io/service-name" = "argocd-service"
+  }
+}
+
+
 # Exposed ArgoCD API - authenticated using `username`/`password`
 provider "argocd" {
   server_addr = data.aws_lb.argocd_lb.dns_name

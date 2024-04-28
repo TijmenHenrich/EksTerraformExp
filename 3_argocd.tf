@@ -18,6 +18,11 @@ resource  "aws_secretsmanager_secret" "argocd_admin_password_secret" {
 resource "aws_secretsmanager_secret_version" "argocd_admin_password_version" {
   secret_id = aws_secretsmanager_secret.argocd_admin_password_secret.id
   secret_string = data.aws_secretsmanager_random_password.argocd_admin_password.random_password
+  lifecycle {
+    ignore_changes = [
+      secret_string, # Ignore changes to the secret_string attribute
+    ]
+  }
 }
 
 data "aws_secretsmanager_secret_version" "argocd_admin_password_data" {
@@ -38,7 +43,7 @@ resource "helm_release" "argocd" {
 
 data "aws_lb" "argocd_lb" {
   tags = {
-    "kubernetes.io/service-name" = "argocd-service"
+    "kubernetes.io/service-name" = "argocd-${var.environment}/argocd-${var.environment}-server"
   }
 }
 

@@ -37,11 +37,12 @@ resource "helm_release" "argocd" {
   namespace  = "argocd-${var.environment}"
   timeout    = "1200"
   values     = [templatefile("argocd/install.yaml", {
-    argocd_admin_password = data.aws_secretsmanager_secret_version.argocd_admin_password_data.secret_string
+    argocdServerAdminPassword = data.aws_secretsmanager_secret_version.argocd_admin_password_data.secret_string
   })]
 }
 
 data "aws_lb" "argocd_lb" {
+  depends_on = [ helm_release.argocd ]
   tags = {
     "kubernetes.io/service-name" = "argocd-${var.environment}/argocd-${var.environment}-server"
   }
@@ -50,9 +51,11 @@ data "aws_lb" "argocd_lb" {
 
 # Exposed ArgoCD API - authenticated using `username`/`password`
 provider "argocd" {
+  depends_on = [ data.aws_lb.argocd_lb.dns_name ]
   server_addr = data.aws_lb.argocd_lb.dns_name
   username    = "admin"
   password    = data.aws_secretsmanager_secret_version.argocd_admin_password_data.secret_string
+  insecure    = true
 }
 
 # Public Helm repository

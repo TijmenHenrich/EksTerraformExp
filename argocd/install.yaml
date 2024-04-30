@@ -9,9 +9,32 @@ server:
       service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
       service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
     type: LoadBalancer
+  config:
+    dex.config:
+      connectors:
+        - type: ldap
+          name: FreeIPA
+          id: freeipa
+          config:
+            host: "ldap://your-freeipa-server.example.com"
+            bindDN: "uid=admin,cn=users,cn=accounts,dc=example,dc=com"
+            bindPW: "your-bind-password"
+            userSearch:
+              baseDN: "cn=users,cn=accounts,dc=example,dc=com"
+              filter: "(objectClass=posixAccount)"
+              username: uid
+              idAttr: uid
+              emailAttr: mail
+              nameAttr: cn
+              preferredUsernameAttr: uid
+              groupSearch:
+                baseDN: "cn=groups,cn=accounts,dc=example,dc=com"
+                filter: "(objectClass=posixGroup)"
+                userAttr: "memberOf"
 
 repoServer:
   replicas: 1
 
 applicationSet:
   replicaCount: 1
+

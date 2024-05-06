@@ -19,7 +19,7 @@ data "aws_security_group" "example_sg" {
 
 resource "kubernetes_namespace" "argocd" {
   metadata {
-    name = "argocd-${var.environment}"
+    name = "argocd-${env_name}"
   }
 }
 
@@ -50,21 +50,21 @@ data "aws_secretsmanager_secret_version" "argocd_admin_password_data" {
 }
 
 resource "helm_release" "argocd" {
-  name       = "argocd-${var.environment}"
+  name       = "argocd-${env_name}"
   chart      = "argo-cd"
   repository = "https://argoproj.github.io/argo-helm"
   version    = "5.27.3"
-  namespace  = "argocd-${var.environment}"
+  namespace  = "argocd-${env_name}"
   timeout    = "1200"
   values     = [templatefile("argocd/install.yaml", {
-    argocdServerAdminPassword = data.aws_secretsmanager_secret_version.argocd_admin_password_data.secret_string
+    configs.secret.argocdServerAdminPassword = data.aws_secretsmanager_secret_version.argocd_admin_password_data.secret_string
   })]
 }
 
 data "aws_lb" "argocd_lb" {
   depends_on = [ helm_release.argocd ]
   tags = {
-    "kubernetes.io/service-name" = "argocd-${var.environment}/argocd-${var.environment}-server"
+    "kubernetes.io/service-name" = "argocd-${env_name}/argocd-${env_name}-server"
   }
 }
 

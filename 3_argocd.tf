@@ -14,6 +14,7 @@ resource "aws_security_group" "argocd_sg" {
 
 # Retrieve the ARNs of the existing resources
 data "aws_security_group" "argocd_sg" {
+  depends_on = [ aws_security_group.argocd_sg ]
   name = "argocd_sg"
 }
 

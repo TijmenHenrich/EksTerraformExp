@@ -37,6 +37,7 @@ resource  "aws_secretsmanager_secret" "argocd_admin_password_secret" {
 
 # Fetch the password from AWS Secrets Manager
 resource "aws_secretsmanager_secret_version" "argocd_admin_password_version" {
+  depends_on = [ aws_secretsmanager_secret.argocd_admin_password_secret ]
   secret_id = aws_secretsmanager_secret.argocd_admin_password_secret.id
   secret_string = data.aws_secretsmanager_random_password.argocd_admin_password.random_password
   lifecycle {
@@ -60,7 +61,7 @@ resource "helm_release" "argocd" {
   values     = [templatefile("argocd/install.yaml", {
     configs = {
       secret = {
-        argocdServerAdminPassword = data.aws_secretsmanager_secret_version.argocd_admin_password_data.secret_string
+        argocdServerAdminPassword = "${data.aws_secretsmanager_secret_version.argocd_admin_password_data.secret_string}"
       }
     }
   })]

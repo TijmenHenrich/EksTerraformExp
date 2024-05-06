@@ -48,12 +48,6 @@ resource "aws_secretsmanager_secret_version" "argocd_admin_password_version" {
 data "aws_secretsmanager_secret_version" "argocd_admin_password_data" {
   secret_id = aws_secretsmanager_secret.argocd_admin_password_secret.id
 }
-variable "argocd_config_secret" {
-  type = map(string)
-  default = {
-    argocdServerAdminPassword = data.aws_secretsmanager_secret_version.argocd_admin_password_data.secret_string // Provide a default value if needed
-  }
-}
 
 resource "helm_release" "argocd" {
   name       = "argocd-${var.env_name}"
@@ -64,7 +58,9 @@ resource "helm_release" "argocd" {
   timeout    = "1200"
   values     = [templatefile("argocd/install.yaml", {
     configs = {
-      secret = var.argocd_config_secret
+      secret = {
+        argocdServerAdminPassword = data.aws_secretsmanager_secret_version.argocd_admin_password_data.secret_string
+      }
     }
   })]
 }

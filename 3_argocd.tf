@@ -48,6 +48,7 @@ resource "aws_secretsmanager_secret_version" "argocd_admin_password_version" {
 }
 
 data "aws_secretsmanager_secret_version" "argocd_admin_password_data" {
+  depends_on = [ aws_secretsmanager_secret_version.argocd_admin_password_version ]
   secret_id = aws_secretsmanager_secret.argocd_admin_password_secret.id
 }
 

@@ -1,6 +1,9 @@
 controller:
   replicas: 1
 
+dex:
+  enabled: true
+
 server:
   replicas: 1
   service:
@@ -10,9 +13,8 @@ server:
       service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
       service.beta.kubernetes.io/aws-load-balancer-manage-backend-security-group-rules: true
     type: LoadBalancer
-
   config:
-    dex.config:
+    dex.config: |
       connectors:
         - type: ldap
           name: FreeIPA

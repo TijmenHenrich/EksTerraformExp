@@ -12,6 +12,7 @@ server:
       service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
       service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
       service.beta.kubernetes.io/aws-load-balancer-manage-backend-security-group-rules: true
+      service.beta.kubernetes.io/aws-load-balancer-security-group: ${securityGroupID}
     type: LoadBalancer
   config:
     dex.config: |
@@ -42,3 +43,7 @@ repoServer:
 applicationSet:
   replicaCount: 1
 
+configs:
+  secret:
+    argocdServerAdminPassword: ${argocdServerAdminPassword}
+    argocdServerAdminPasswordMtime: "2006-01-02T15:04:05Z"

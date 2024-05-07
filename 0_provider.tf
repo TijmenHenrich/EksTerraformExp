@@ -16,6 +16,10 @@ terraform {
       source = "oboukili/argocd"
       version = ">= 6.0.3"
     }
+    htpasswd = {
+      source  = "loafoe/htpasswd"
+      version = ">= 1.2.1"
+    }
   }
 
   required_version = "~> 1.0"

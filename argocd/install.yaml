@@ -12,8 +12,8 @@ server:
       service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
       service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
       service.beta.kubernetes.io/aws-load-balancer-manage-backend-security-group-rules: true
-      service.beta.kubernetes.io/aws-load-balancer-security-group: ${securityGroupId}
     type: LoadBalancer
+    sourceRanges: ["157.97.112.130/32", "149.11.201.58/32"]
   config:
     dex.config: |
       connectors:

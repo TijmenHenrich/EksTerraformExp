@@ -30,13 +30,6 @@ data "aws_secretsmanager_random_password" "argocd_admin_password" {
   password_length = 20
 }
 
-#init provider htpasswd https://registry.terraform.io/providers/loafoe/htpasswd/latest/docs/resources/password
-provider "htpasswd" {
-}
-resource "htpasswd_password" "hash"{
-  depends_on = [ data.aws_secretsmanager_random_password.argocd_admin_password ]
-  password = data.aws_secretsmanager_random_password.argocd_admin_password.random_password
-}
 
 
 # Create the secret in AWS Secrets Manager, no value is added yet
@@ -61,6 +54,13 @@ data "aws_secretsmanager_secret_version" "argocd_admin_password_data" {
   depends_on = [ aws_secretsmanager_secret_version.argocd_admin_password_version ]
   secret_id = aws_secretsmanager_secret.argocd_admin_password_secret.id
 }
+#init provider htpasswd https://registry.terraform.io/providers/loafoe/htpasswd/latest/docs/resources/password
+provider "htpasswd" {
+}
+resource "htpasswd_password" "hash"{
+  depends_on = [ data.aws_secretsmanager_secret_version.argocd_admin_password_data ]
+  password = data.aws_secretsmanager_secret_version.argocd_admin_password_data.secret_string
+}
 # Deploy ArgoCD with custom password and LDAP login
 resource "helm_release" "argocd" {
   depends_on = [ aws_security_group.argocd_sg ]
@@ -71,7 +71,7 @@ resource "helm_release" "argocd" {
   namespace  = "argocd-${var.env_name}"
   timeout    = "1200"
   values     = [templatefile("argocd/install.yaml", {
-        argocdServerAdminPassword = "${data.aws_secretsmanager_secret_version.argocd_admin_password_data.secret_string}",
+        argocdServerAdminPassword = "${htpasswd_password.hash.bcrypt}",
         securityGroupId = "${data.aws_security_group.argocd_sg.id}",
   })]
 }

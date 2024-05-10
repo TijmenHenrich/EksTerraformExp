@@ -39,16 +39,16 @@ resource  "aws_secretsmanager_secret" "argocd_admin_password_secret" {
   name = "argocd-admin-password"
 }
 resource "htpasswd_password" "hash"{
-  depends_on = [ data.ws_secretsmanager_random_password.argocd_admin_password ]
-  password = data.ws_secretsmanager_random_password.argocd_admin_password
+  depends_on = [ data.aws_secretsmanager_random_password.argocd_admin_password ]
+  password = data.aws_secretsmanager_random_password.argocd_admin_password
 }
 
 
 # Fetch the password and store it in the aws_secretsmanager_secret_version
 resource "aws_secretsmanager_secret_version" "argocd_admin_password_version" {
-  depends_on = [ data.ws_secretsmanager_random_password.argocd_admin_password ]
+  depends_on = [ data.aws_secretsmanager_random_password.argocd_admin_password ]
   secret_id = aws_secretsmanager_secret.argocd_admin_password_secret.id
-  secret_string = data.ws_secretsmanager_random_password.argocd_admin_password
+  secret_string = data.aws_secretsmanager_random_password.argocd_admin_password
   lifecycle {
     ignore_changes = [
       secret_string, # Ignore changes to the secret_string attribute

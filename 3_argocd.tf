@@ -29,19 +29,26 @@ resource "kubernetes_namespace" "argocd" {
 data "aws_secretsmanager_random_password" "argocd_admin_password" { 
   password_length = 20
 }
-
+#init provider htpasswd https://registry.terraform.io/providers/loafoe/htpasswd/latest/docs/resources/password
+provider "htpasswd" {
+}
 
 
 # Create the secret in AWS Secrets Manager, no value is added yet
 resource  "aws_secretsmanager_secret" "argocd_admin_password_secret" {
   name = "argocd-admin-password"
 }
+resource "htpasswd_password" "hash"{
+  depends_on = [ data.ws_secretsmanager_random_password.argocd_admin_password ]
+  password = data.ws_secretsmanager_random_password.argocd_admin_password
+}
 
-# Fetch the bcrypt and store it in the aws_secretsmanager_secret_version
+
+# Fetch the password and store it in the aws_secretsmanager_secret_version
 resource "aws_secretsmanager_secret_version" "argocd_admin_password_version" {
-  depends_on = [ htpasswd_password.hash ]
+  depends_on = [ data.ws_secretsmanager_random_password.argocd_admin_password ]
   secret_id = aws_secretsmanager_secret.argocd_admin_password_secret.id
-  secret_string = htpasswd_password.hash.bcrypt
+  secret_string = data.ws_secretsmanager_random_password.argocd_admin_password
   lifecycle {
     ignore_changes = [
       secret_string, # Ignore changes to the secret_string attribute
@@ -54,13 +61,8 @@ data "aws_secretsmanager_secret_version" "argocd_admin_password_data" {
   depends_on = [ aws_secretsmanager_secret_version.argocd_admin_password_version ]
   secret_id = aws_secretsmanager_secret.argocd_admin_password_secret.id
 }
-#init provider htpasswd https://registry.terraform.io/providers/loafoe/htpasswd/latest/docs/resources/password
-provider "htpasswd" {
-}
-resource "htpasswd_password" "hash"{
-  depends_on = [ data.aws_secretsmanager_secret_version.argocd_admin_password_data ]
-  password = data.aws_secretsmanager_secret_version.argocd_admin_password_data.secret_string
-}
+
+
 # Deploy ArgoCD with custom password and LDAP login
 resource "helm_release" "argocd" {
   depends_on = [ aws_security_group.argocd_sg ]
@@ -71,8 +73,8 @@ resource "helm_release" "argocd" {
   namespace  = "argocd-${var.env_name}"
   timeout    = "1200"
   values     = [templatefile("argocd/install.yaml", {
-        argocdServerAdminPassword = "${htpasswd_password.hash.bcrypt}",
-        securityGroupId = "${data.aws_security_group.argocd_sg.id}",
+        argocdServerAdminPassword = "${htpasswd_password.hash.bcrypt}"#,
+        #securityGroupId = "${data.aws_security_group.argocd_sg.id}",
   })]
 }
 
